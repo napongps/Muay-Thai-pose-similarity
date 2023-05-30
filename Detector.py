@@ -84,4 +84,4 @@ with PoseLandmarker.create_from_options(options) as landmarker:
       break
 
   cap.release()
-  cv.destroyAllWindows()
+  cv2.destroyAllWindows()
