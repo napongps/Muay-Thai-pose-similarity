@@ -1,9 +1,7 @@
 import mediapipe as mp
-from mediapipe import solutions
-from mediapipe.framework.formats import landmark_pb2
 import numpy as np
 import cv2 
-import datetime
+from draw_landmarks import draw_landmarks_on_image
 
 model_path = 'pose_landmarker_lite.task'
 
@@ -13,34 +11,14 @@ PoseLandmarkerOptions = mp.tasks.vision.PoseLandmarkerOptions
 PoseLandmarkerResult = mp.tasks.vision.PoseLandmarkerResult
 VisionRunningMode = mp.tasks.vision.RunningMode
 
-
-def draw_landmarks_on_image(rgb_image, detection_result):
-  pose_landmarks_list = detection_result.pose_landmarks
-  annotated_image = np.copy(rgb_image)
-
-  # Loop through the detected poses to visualize.
-  for idx in range(len(pose_landmarks_list)):
-    pose_landmarks = pose_landmarks_list[idx]
-
-    # Draw the pose landmarks.
-    pose_landmarks_proto = landmark_pb2.NormalizedLandmarkList()
-    pose_landmarks_proto.landmark.extend([
-      landmark_pb2.NormalizedLandmark(x=landmark.x, y=landmark.y, z=landmark.z) for landmark in pose_landmarks
-    ])
-    solutions.drawing_utils.draw_landmarks(
-      annotated_image,
-      pose_landmarks_proto,
-      solutions.pose.POSE_CONNECTIONS,
-      solutions.drawing_styles.get_default_pose_landmarks_style())
-  return annotated_image
-
 # Create a pose landmarker instance with the live stream mode:
 def print_result(result: PoseLandmarkerResult, output_image: mp.Image, timestamp_ms: int):
-  print(len(result.pose_landmarks))
-  annotated_image = draw_landmarks_on_image(output_image.numpy_view(), result)
+  annotated_image = draw_landmarks_on_image(output_image, result)
   annotated_image = cv2.cvtColor(annotated_image, cv2.COLOR_RGB2BGR)
   cv2.imshow("OUTPUT", annotated_image)
-  cv2.waitKey(1)
+  if cv2.waitKey(1) & 0xFF == ord('q'):
+    cap.release()
+    cv2.destroyAllWindows()
 
 options = PoseLandmarkerOptions(
     base_options=BaseOptions(model_asset_path=model_path),
@@ -48,20 +26,19 @@ options = PoseLandmarkerOptions(
     num_poses= 2,
     result_callback=print_result)
 
-detector = mp.tasks.vision.PoseLandmarker.create_from_options(options)
+landmarker = mp.tasks.vision.PoseLandmarker.create_from_options(options)
 
-
-with PoseLandmarker.create_from_options(options) as landmarker:
+def Live_detector(video_path):
   # Use OpenCV’s VideoCapture to start capturing from the webcam.
-  cap = cv2.VideoCapture("C:\\Users\\Gear\\Downloads\\5_ ยอเขาพระสุเมรุ (Subclip).mp4")
+  cap = cv2.VideoCapture(video_path)
   frame_time_stamp = 1
 
   # Create a loop to read the latest frame from the camera using VideoCapture#read()
   if not cap.isOpened():
     print("Cannot open camera")
     exit()
-  while True:
 
+  while True:
     # Capture frame-by-frame
     ret, frame = cap.read()
     
@@ -78,10 +55,8 @@ with PoseLandmarker.create_from_options(options) as landmarker:
     # The landmarker is initialized. Use it here.
     annotated_image = landmarker.detect_async(mp_image, frame_time_stamp)
     frame_time_stamp += 1
-    print(frame_time_stamp)
-
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-      break
 
   cap.release()
   cv2.destroyAllWindows()
+
+Live_detector(0)
