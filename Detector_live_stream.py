@@ -20,18 +20,19 @@ def print_result(result: PoseLandmarkerResult, output_image: mp.Image, timestamp
     cap.release()
     cv2.destroyAllWindows()
 
-options = PoseLandmarkerOptions(
-    base_options=BaseOptions(model_asset_path=model_path),
-    running_mode=VisionRunningMode.LIVE_STREAM,
-    num_poses= 2,
-    result_callback=print_result)
+def Live_detector(video_path, people, callback_function):
+  
+  options = PoseLandmarkerOptions(
+      base_options=BaseOptions(model_asset_path=model_path),
+      running_mode=VisionRunningMode.LIVE_STREAM,
+      num_poses= people,
+      result_callback=callback_function)
 
-landmarker = mp.tasks.vision.PoseLandmarker.create_from_options(options)
-
-def Live_detector(video_path):
+  landmarker = mp.tasks.vision.PoseLandmarker.create_from_options(options)
+  
   # Use OpenCV’s VideoCapture to start capturing from the webcam.
   cap = cv2.VideoCapture(video_path)
-  frame_time_stamp = 1
+  frame_timestamp_ms = 0
 
   # Create a loop to read the latest frame from the camera using VideoCapture#read()
   if not cap.isOpened():
@@ -53,10 +54,8 @@ def Live_detector(video_path):
     mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=frame_rgb)
     
     # The landmarker is initialized. Use it here.
-    annotated_image = landmarker.detect_async(mp_image, frame_time_stamp)
-    frame_time_stamp += 1
+    annotated_image = landmarker.detect_async(mp_image, frame_timestamp_ms)
+    frame_timestamp_ms += 1
 
   cap.release()
   cv2.destroyAllWindows()
-
-Live_detector(0)

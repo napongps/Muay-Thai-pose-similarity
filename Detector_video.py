@@ -11,16 +11,17 @@ PoseLandmarkerOptions = mp.tasks.vision.PoseLandmarkerOptions
 PoseLandmarkerResult = mp.tasks.vision.PoseLandmarkerResult
 VisionRunningMode = mp.tasks.vision.RunningMode
 
-options = PoseLandmarkerOptions(
+def Video_detector(video_path, people):
+
+    options = PoseLandmarkerOptions(
     base_options=BaseOptions(model_asset_path=model_path),
     running_mode=VisionRunningMode.VIDEO,
-    num_poses= 2
+    num_poses= people
     )
 
-landmarker = mp.tasks.vision.PoseLandmarker.create_from_options(options)
+    landmarker = mp.tasks.vision.PoseLandmarker.create_from_options(options)
 
-def Video_detector(video_path):
-# Use OpenCV’s VideoCapture to start capturing from the webcam.
+    # Use OpenCV’s VideoCapture to start capturing from the webcam.
     cap = cv2.VideoCapture(video_path)
     frame_timestamp_ms = 0
 
@@ -53,7 +54,9 @@ def Video_detector(video_path):
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
+        yield [pose_landmarker_result, annotated_image]
+
     cap.release()
     cv2.destroyAllWindows()
 
-Video_detector(0)
+    # return pose_landmarker_result
